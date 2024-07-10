@@ -1,46 +1,88 @@
+import * as React from 'react';
+import { View, Button } from 'react-native';
+import { NavigationContainer } from '@react-navigation/native';
+import {
+  createNativeStackNavigator,
+} from '@react-navigation/native-stack';
 import Animated, {
-  useSharedValue,
-  withTiming,
-  useAnimatedStyle,
-  Easing,
-} from "react-native-reanimated";
-import { View, Button } from "react-native";
+  SharedTransition,
+  withSpring,
+} from 'react-native-reanimated';
 
-export default function AnimatedStyleUpdateExample(props) {
-  const randomWidth = useSharedValue(10);
+const Stack = createNativeStackNavigator();
 
-  const config = {
-    duration: 500,
-    easing: Easing.bezier(0.5, 0.01, 0, 1),
+const transition = SharedTransition.custom((values) => {
+  'worklet';
+  return {
+    width: withSpring(values.targetWidth),
+    height: withSpring(values.targetHeight),
+    originX: withSpring(values.targetOriginX),
+    originY: withSpring(values.targetOriginY),
   };
+});
 
-  const style = useAnimatedStyle(() => {
-    return {
-      width: withTiming(randomWidth.value, config),
-    };
-  });
-
+function Screen1({ navigation }) {
   return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-        flexDirection: "column",
-      }}
-    >
+    <Animated.ScrollView style={{ flex: 1 }}>
       <Animated.View
-        style={[
-          { width: 100, height: 80, backgroundColor: "black", margin: 30 },
-          style,
-        ]}
+        style={{
+          width: 150,
+          height: 150,
+          marginLeft: 20,
+          marginTop: 50,
+          backgroundColor: 'green',
+        }}
+        sharedTransitionTag="tag"
+        sharedTransitionStyle={transition}
       />
       <Button
-        title="toggle"
-        onPress={() => {
-          randomWidth.value = Math.random() * 350;
-        }}
+        onPress={() => navigation.navigate('Screen2')}
+        title="go to screen2"
       />
+    </Animated.ScrollView>
+  );
+}
+
+function Screen2({ navigation }) {
+  return (
+    <View style={{ flex: 1 }}>
+      <Animated.View
+        style={{
+          width: 200,
+          height: 300,
+          marginLeft: 60,
+          marginTop: 100,
+          backgroundColor: 'green',
+        }}
+        sharedTransitionTag="tag"
+        sharedTransitionStyle={transition}
+      />
+      <Button title="go back" onPress={() => navigation.navigate('Screen1')} />
     </View>
+  );
+}
+
+function CustomTransitionExample() {
+  return (
+    <Stack.Navigator>
+      <Stack.Screen
+        name="Screen1"
+        component={Screen1}
+        options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="Screen2"
+        component={Screen2}
+        options={{ headerShown: false }}
+      />
+    </Stack.Navigator>
+  );
+}
+
+export default function App() {
+  return (
+    <NavigationContainer>
+      <CustomTransitionExample />
+    </NavigationContainer>
   );
 }
